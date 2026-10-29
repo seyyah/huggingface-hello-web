@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>istabot hello model</title>
+<!-- Sunucusuz tahmin: model.onnx doğrudan Hugging Face Hub'dan (CORS açık) çekilir,
+     onnxruntime-web ile tarayıcıda çalışır. Model reposu: ?repo=kullanici/ad -->
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.min.js"></script>
+<style>
+  :root { --bg:#f7f7f5; --fg:#1d1d1b; --muted:#6b6b66; --card:#fff; --line:#e2e2dc; --accent:#2f6fde; --ok:#1f8a4c; --bad:#c2410c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161615; --fg:#ececea; --muted:#9a9a94; --card:#1f1f1d; --line:#33332f; --accent:#6b9cf0; --ok:#4cc27e; --bad:#f08a4b; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .muted { color:var(--muted); font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-top:16px; }
+  form { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; }
+  label { display:flex; flex-direction:column; gap:4px; font-size:13px; color:var(--muted); }
+  input { font:inherit; color:var(--fg); background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:6px 8px; }
+  button { font:inherit; margin-top:12px; padding:8px 16px; border:0; border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  .bar { display:flex; align-items:center; gap:8px; margin:6px 0; }
+  .bar span:first-child { width:110px; }
+  .track { flex:1; height:10px; background:var(--line); border-radius:5px; overflow:hidden; }
+  .fill { height:100%; background:var(--accent); }
+  pre { margin:0; font-size:12px; white-space:pre-wrap; word-break:break-all; }
+  code { font-size:12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="baslik">istabot hello model</h1>
+  <div class="muted" id="aciklama">Model yükleniyor…</div>
+
+  <div class="card">
+    <form id="form"></form>
+    <button id="tahmin" disabled>Tahmin et</button>
+  </div>
+
+  <div class="card">
+    <div id="sonuc" class="muted">Sonuç burada görünecek.</div>
+  </div>
+
+  <div class="card muted">
+    Kaynak: <code id="kaynak"></code><br>
+    Ham çıktı:
+    <pre id="ham">—</pre>
+  </div>
+</main>
+<script>
+ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/";
+
+let repo, taban, config, oturum;
+
+// Model reposu önceliği: ?repo=  →  site.json (hf_cli.py pages yazar)  →  sabit varsayılan.
+async function repoBul() {
+  const param = new URLSearchParams(location.search).get("repo");
+  if (param) return param;
+  try {
+    return (await (await fetch("site.json", { cache: "no-store" })).json()).model_repo;
+  } catch {
+    return "5eyyah/istabot-hello-diabetes";
+  }
+}
+
+async function yukle() {
+  repo = await repoBul();
+  taban = `https://huggingface.co/${repo}/resolve/main/`;
+  document.getElementById("kaynak").textContent = taban;
+  try {
+    config = await (await fetch(taban + "config.json", { cache: "no-store" })).json();
+    oturum = await ort.InferenceSession.create(taban + "model.onnx");
+  } catch (e) {
+    document.getElementById("aciklama").textContent = `✗ Model yüklenemedi (${repo}): ${e.message}`;
+    return;
+  }
+  document.getElementById("baslik").textContent = config.title;
+  document.getElementById("aciklama").textContent =
+    `${config.description} · test AUC ${config.metrics.auc}, accuracy ${config.metrics.accuracy}`;
+  document.getElementById("form").innerHTML = config.features.map(o =>
+    `<label>${o.label}<input type="number" step="any" name="${o.name}" value="${o.example}" required></label>`).join("");
+  document.getElementById("tahmin").disabled = false;
+}
+
+async function tahmin(e) {
+  e.preventDefault();
+  const form = new FormData(document.getElementById("form"));
+  const girdi = Object.fromEntries(config.features.map(o => [o.name, Number(form.get(o.name))]));
+  const x = new ort.Tensor("float32", Float32Array.from(config.features.map(o => girdi[o.name])), [1, config.features.length]);
+  const cikti = await oturum.run({ input: x });
+  const p = Array.from(cikti.probabilities.data);
+  const proba = Object.fromEntries(config.classes.map((c, i) => [config.class_labels[c], +p[i].toFixed(4)]));
+  document.getElementById("sonuc").innerHTML = Object.entries(proba).map(([ad, v]) =>
+    `<div class="bar"><span>${ad}</span><div class="track"><div class="fill" style="width:${v * 100}%"></div></div><span>${(v * 100).toFixed(1)}%</span></div>`).join("");
+  document.getElementById("ham").textContent = JSON.stringify({ repo, input: girdi, proba }, null, 2);
+}
+
+document.getElementById("tahmin").addEventListener("click", tahmin);
+yukle();
+</script>
+</body>
+</html>
