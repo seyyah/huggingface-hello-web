@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>istabot hello model</title>
+<title>huggingface hello</title>
 <!-- Sunucusuz tahmin: model.onnx doğrudan Hugging Face Hub'dan (CORS açık) çekilir,
      onnxruntime-web ile tarayıcıda çalışır. Model reposu: ?repo=kullanici/ad -->
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.min.js"></script>
@@ -29,11 +29,12 @@
   .fill { height:100%; background:var(--accent); }
   pre { margin:0; font-size:12px; white-space:pre-wrap; word-break:break-all; }
   code { font-size:12px; }
+  a { color:var(--accent); }
 </style>
 </head>
 <body>
 <main>
-  <h1 id="baslik">istabot hello model</h1>
+  <h1 id="baslik">huggingface hello</h1>
   <div class="muted" id="aciklama">Model yükleniyor…</div>
 
   <div class="card">
@@ -50,6 +51,14 @@
     Ham çıktı:
     <pre id="ham">—</pre>
   </div>
+
+  <p class="muted">
+    Tahmin bu tarayıcıda yapılır, girdiler hiçbir sunucuya gönderilmez. Model Hugging Face'ten
+    (<code>model.onnx</code>) indirilir ve <code>onnxruntime-web</code> ile çalıştırılır.
+    Kaynak kod, mobil uygulama ve sunucu (Rails) sürümü:
+    <a href="https://github.com/seyyah/huggingface-hello-web">github.com/seyyah/huggingface-hello-web</a>
+    · Model: <a id="modelLink" href="https://huggingface.co/5eyyah/hello-diabetes-onnx">Hugging Face</a>
+  </p>
 </main>
 <script>
 ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/";
@@ -63,13 +72,14 @@ async function repoBul() {
   try {
     return (await (await fetch("site.json", { cache: "no-store" })).json()).model_repo;
   } catch {
-    return "5eyyah/istabot-hello-diabetes";
+    return "5eyyah/hello-diabetes-onnx";
   }
 }
 
 async function yukle() {
   repo = await repoBul();
   taban = `https://huggingface.co/${repo}/resolve/main/`;
+  document.getElementById("modelLink").href = `https://huggingface.co/${repo}`;
   document.getElementById("kaynak").textContent = taban;
   try {
     config = await (await fetch(taban + "config.json", { cache: "no-store" })).json();
@@ -78,7 +88,6 @@ async function yukle() {
     document.getElementById("aciklama").textContent = `✗ Model yüklenemedi (${repo}): ${e.message}`;
     return;
   }
-  document.getElementById("baslik").textContent = config.title;
   document.getElementById("aciklama").textContent =
     `${config.description} · test AUC ${config.metrics.auc}, accuracy ${config.metrics.accuracy}`;
   document.getElementById("form").innerHTML = config.features.map(o =>

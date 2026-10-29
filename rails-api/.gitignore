@@ -1,0 +1,12 @@
+/.bundle
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+/vendor/bundle
+/storage/models/*
+!/storage/models/.keep
+.env
+
+# Rails credentials anahtarı — ASLA commit/paylaşım yok (üretimde RAILS_MASTER_KEY ya da SECRET_KEY_BASE env)
+/config/master.key

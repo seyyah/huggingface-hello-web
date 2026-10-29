@@ -1,0 +1,16 @@
+# huggingface hello — Python bağımlılıkları
+# ===================================================
+# Python 3.12.
+# Kurulum:
+#   uv venv --python 3.12 .venv
+#   uv pip install --python .venv -r requirements.txt
+huggingface_hub>=2.3
+scikit-learn==1.9.1
+pandas
+joblib
+skl2onnx==1.20.0     # sklearn Pipeline → model.onnx
+onnx
+onnxruntime          # ONNX ↔ sklearn eşdeğerlik kontrolü + hub-predict
+# Yalnız push-space (PRO hesap) için:
+gradio==6.31.0
+gradio_client

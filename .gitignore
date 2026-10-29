@@ -1,0 +1,10 @@
+# Python
+.venv/
+__pycache__/
+*.log
+
+# hf_cli.py çıktıları (model, Space taslağı)
+_out/
+
+# Ortam / secret
+.env

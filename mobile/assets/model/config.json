@@ -1,0 +1,62 @@
+{
+  "title": "huggingface hello — diabetes",
+  "description": "Demo model (LogisticRegression, Pima diabetes). Yalnız deneme amaçlıdır; klinik karar için KULLANILMAZ.",
+  "target": "diabetes",
+  "class_labels": {
+    "0": "diabetes yok",
+    "1": "diabetes var"
+  },
+  "features": [
+    {
+      "name": "pregnancies",
+      "label": "pregnancies",
+      "example": 1.0
+    },
+    {
+      "name": "glucose",
+      "label": "glucose",
+      "example": 193.0
+    },
+    {
+      "name": "blood_pressure",
+      "label": "blood_pressure",
+      "example": 50.0
+    },
+    {
+      "name": "skin_thickness",
+      "label": "skin_thickness",
+      "example": 16.0
+    },
+    {
+      "name": "insulin",
+      "label": "insulin",
+      "example": 375.0
+    },
+    {
+      "name": "bmi",
+      "label": "bmi",
+      "example": 25.9
+    },
+    {
+      "name": "pedigree",
+      "label": "pedigree",
+      "example": 0.655
+    },
+    {
+      "name": "age",
+      "label": "age",
+      "example": 24.0
+    }
+  ],
+  "classes": [
+    "0",
+    "1"
+  ],
+  "metrics": {
+    "accuracy": 0.7792,
+    "auc": 0.8428
+  },
+  "seed": 13,
+  "sklearn_version": "1.9.1",
+  "python_version": "3.12"
+}
